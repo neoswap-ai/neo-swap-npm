@@ -4,6 +4,7 @@ import { ErrorFeedback, TxWithSigner } from "./types";
 import { isConfirmedTx } from "./isConfirmedTx.function";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { delay } from "./delay";
+import { addPrioritizationFee } from "./addPrioritizationFee";
 
 // const getProgram  from "./getProgram.obj");
 
@@ -14,9 +15,16 @@ export async function sendBundledTransactions(Data: {
     simulation?: boolean;
     skipConfirmation?: boolean;
     provider?: AnchorProvider;
+    prioritizationFee?: number;
 }): Promise<string[]> {
     try {
         // console.log(txWithSigners);
+
+        if (Data.prioritizationFee) {
+            Data.txsWithoutSigners = Data.txsWithoutSigners.map((tx) =>
+                addPrioritizationFee(tx, Data.prioritizationFee)
+            );
+        }
 
         const provider = Data.provider
             ? Data.provider

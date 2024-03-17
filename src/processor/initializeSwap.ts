@@ -13,6 +13,7 @@ export async function initializeSwap(Data: {
     skipConfirmation?: boolean;
     validateOwnership?: "warning" | "error";
     validateOwnershipIgnore?: string[];
+    prioritizationFee?: number;
 }): Promise<{
     initializeData: InitializeData;
     transactionHashs: string[];
@@ -40,6 +41,7 @@ export async function initializeSwap(Data: {
             clusterOrUrl: Data.clusterOrUrl,
             simulation: Data.simulation,
             skipConfirmation: Data.skipConfirmation,
+            prioritizationFee: Data.prioritizationFee
         });
 
         return {
