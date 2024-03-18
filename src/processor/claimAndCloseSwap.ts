@@ -1,5 +1,5 @@
 import { Cluster, Keypair, PublicKey } from "@solana/web3.js";
-import { sendBundledTransactions } from "../utils/sendBundledTransactions.function";
+import { sendBundledTransactionsV2 } from "../utils/sendBundledTransactions.function";
 import { TxWithSigner } from "../utils/types";
 import { createClaimSwapInstructions } from "../programInstructions/claimSwap.instructions";
 import { validateDeposit } from "../programInstructions/subFunction/validateDeposit.instructions";
@@ -14,6 +14,7 @@ export async function claimAndCloseSwap(Data: {
     skipFinalize?: boolean;
     simulation?: boolean;
     skipConfirmation?: boolean;
+    prioritizationFee?: number;
 }): Promise<string[]> {
     let txToSend: TxWithSigner[] = [];
     const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
@@ -48,13 +49,14 @@ export async function claimAndCloseSwap(Data: {
         if (validateClaimTxData) txToSend.push(...validateClaimTxData);
     }
 
-    const transactionHashs = await sendBundledTransactions({
+    const transactionHashs = await sendBundledTransactionsV2({
         provider: program.provider as AnchorProvider,
         txsWithoutSigners: txToSend,
         signer: Data.signer,
         clusterOrUrl: Data.clusterOrUrl,
         simulation: Data.simulation,
         skipConfirmation: Data.skipConfirmation,
+        prioritizationFee: Data.prioritizationFee,
     });
 
     return transactionHashs;

@@ -1,5 +1,5 @@
 import { Cluster, Keypair, PublicKey } from "@solana/web3.js";
-import { sendBundledTransactions } from "../utils/sendBundledTransactions.function";
+import { sendBundledTransactionsV2 } from "../utils/sendBundledTransactions.function";
 import { createDepositSwapInstructions } from "../programInstructions/depositSwap.instructions";
 import { getProgram } from "../utils/getProgram.obj";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -10,6 +10,7 @@ export async function depositSwap(Data: {
     clusterOrUrl: Cluster | string;
     simulation?: boolean;
     skipConfirmation?: boolean;
+    prioritizationFee?: number;
 }): Promise<string[]> {
     const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
     let depositSwapData = await createDepositSwapInstructions({
@@ -19,13 +20,14 @@ export async function depositSwap(Data: {
         program,
     });
 
-    const transactionHashs = await sendBundledTransactions({
+    const transactionHashs = await sendBundledTransactionsV2({
         provider: program.provider as AnchorProvider,
         txsWithoutSigners: depositSwapData,
         signer: Data.signer,
         clusterOrUrl: Data.clusterOrUrl,
         simulation: Data.simulation,
         skipConfirmation: Data.skipConfirmation,
+        prioritizationFee: Data.prioritizationFee,
     });
 
     return transactionHashs;

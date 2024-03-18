@@ -1,6 +1,6 @@
 import { Cluster, Keypair, PublicKey } from "@solana/web3.js";
 import { createInitializeSwapInstructions } from "../programInstructions/initializeSwap.instructions";
-import { sendBundledTransactions } from "../utils/sendBundledTransactions.function";
+import { sendBundledTransactionsV2 } from "../utils/sendBundledTransactions.function";
 import { InitializeData, SwapInfo } from "../utils/types";
 import { getProgram } from "../utils/getProgram.obj";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -34,7 +34,7 @@ export async function initializeSwap(Data: {
     //     throw initializeData.warning;
     // }
     try {
-        const transactionHashs = await sendBundledTransactions({
+        const transactionHashs = await sendBundledTransactionsV2({
             provider: program.provider as AnchorProvider,
             txsWithoutSigners: initializeData.txWithoutSigner,
             signer: Data.signer,
