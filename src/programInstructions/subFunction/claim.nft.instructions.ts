@@ -36,15 +36,13 @@ export async function getClaimNftInstructions(Data: {
 }> {
     let instruction = [];
     let newAtas = [];
-    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+    
+    instruction.push(ComputeBudgetProgram.setComputeUnitLimit({
         units: 600000,
-    });
-
-    const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: 1,
-    });
-    instruction.push(modifyComputeUnits);
-    instruction.push(addPriorityFee);
+    }));
+    // instruction.push(ComputeBudgetProgram.setComputeUnitPrice({
+    //     microLamports: 1,
+    // }));
     const { mintAta: destinaryMintAta, instruction: destinaryMintAtaTx } = await findOrCreateAta({
         connection: Data.program.provider.connection,
         owner: Data.destinary,
