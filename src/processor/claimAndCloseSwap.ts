@@ -15,6 +15,7 @@ export async function claimAndCloseSwap(Data: {
     simulation?: boolean;
     skipConfirmation?: boolean;
     prioritizationFee?: number;
+    retryDelay?: number;
 }): Promise<string[]> {
     let txToSend: TxWithSigner[] = [];
     const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
@@ -57,6 +58,7 @@ export async function claimAndCloseSwap(Data: {
         simulation: Data.simulation,
         skipConfirmation: Data.skipConfirmation,
         prioritizationFee: Data.prioritizationFee,
+        retryDelay: Data.retryDelay
     });
 
     return transactionHashs;

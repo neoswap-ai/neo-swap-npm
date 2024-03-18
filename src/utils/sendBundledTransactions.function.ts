@@ -102,6 +102,7 @@ export async function sendBundledTransactionsV2(Data: {
     skipConfirmation?: boolean;
     provider?: AnchorProvider;
     prioritizationFee?: number;
+    retryDelay?: number;
 }): Promise<string[]> {
     try {
         // console.log(txWithSigners);
@@ -139,7 +140,8 @@ export async function sendBundledTransactionsV2(Data: {
                 txsWithSigners[i],
                 provider.connection,
                 !Data.simulation,
-                "confirmed"
+                "confirmed",
+                Data.retryDelay ? Data.retryDelay : 5000
             );
             transactionHashs.push(hash);
         }
@@ -153,7 +155,8 @@ async function sendTransaction(
     tx: TxWithSigner,
     connection: Connection,
     skipPreflight: boolean,
-    commitment: Finality
+    commitment: Finality,
+    retryDelay = 5000
 ): Promise<string> {
     if (!tx.signers) {
         throw new Error("No signers provided");
@@ -181,8 +184,9 @@ async function sendTransaction(
         
         if (check === true) {
             keepChecking = false;
+            console.log("Transaction confirmed: ", hash);
         } else if (check === null) {
-            await delay(5000);
+            await delay(retryDelay);
         } else {
             throw new Error("Transaction failed");
         }

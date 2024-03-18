@@ -14,6 +14,7 @@ export async function initializeSwap(Data: {
     validateOwnership?: "warning" | "error";
     validateOwnershipIgnore?: string[];
     prioritizationFee?: number;
+    retryDelay?: number;
 }): Promise<{
     initializeData: InitializeData;
     transactionHashs: string[];
@@ -41,7 +42,8 @@ export async function initializeSwap(Data: {
             clusterOrUrl: Data.clusterOrUrl,
             simulation: Data.simulation,
             skipConfirmation: Data.skipConfirmation,
-            prioritizationFee: Data.prioritizationFee
+            prioritizationFee: Data.prioritizationFee,
+            retryDelay: Data.retryDelay
         });
 
         return {
