@@ -16,8 +16,16 @@ export async function cancelAndCloseSwap(Data: {
     prioritizationFee?: number;
     retryDelay?: number;
 }): Promise<string[]> {
-    let txToSend: TxWithSigner[] = [];
     const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
+    let sendConfig = {
+        provider: program.provider as AnchorProvider,
+        signer: Data.signer,
+        clusterOrUrl: Data.clusterOrUrl,
+        simulation: Data.simulation,
+        skipConfirmation: Data.skipConfirmation,
+        prioritizationFee: Data.prioritizationFee,
+        retryDelay: Data.retryDelay,
+    };
 
     let cancelTxData = await createCancelSwapInstructions({
         swapDataAccount: Data.swapDataAccount,
@@ -28,8 +36,6 @@ export async function cancelAndCloseSwap(Data: {
     });
     // console.log("cancelTxData", cancelTxData);
 
-    if (cancelTxData) txToSend.push(...cancelTxData);
-
     let validateCancelTxData = await createValidateCanceledInstructions({
         swapDataAccount: Data.swapDataAccount,
         signer: Data.signer.publicKey,
@@ -37,18 +43,30 @@ export async function cancelAndCloseSwap(Data: {
         program,
     });
 
-    if (validateCancelTxData) txToSend.push(...validateCancelTxData);
+    let transactionHashs: string[] = [];
 
-    const transactionHashs = await sendBundledTransactionsV2({
-        provider: program.provider as AnchorProvider,
-        txsWithoutSigners: txToSend,
-        signer: Data.signer,
-        clusterOrUrl: Data.clusterOrUrl,
-        simulation: Data.simulation,
-        skipConfirmation: Data.skipConfirmation,
-        prioritizationFee: Data.prioritizationFee,
-        retryDelay: Data.retryDelay
-    });
+    if (cancelTxData) {
+        await sendBundledTransactionsV2({
+            txsWithoutSigners: cancelTxData,
+            ...sendConfig,            
+        }).then((txhs) => {
+            transactionHashs.push(...txhs);
+        }).catch((error) => {
+            console.log("error", error);
+        });
+
+    }
+
+    if (validateCancelTxData) {
+        await sendBundledTransactionsV2({
+            txsWithoutSigners: validateCancelTxData,
+            ...sendConfig,
+        }).then((txhs) => {
+            transactionHashs.push(...txhs);
+        }).catch((error) => {
+            console.log("error", error);
+        });
+    }
 
     return transactionHashs;
 }

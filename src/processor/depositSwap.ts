@@ -14,6 +14,16 @@ export async function depositSwap(Data: {
     retryDelay?: number;
 }): Promise<string[]> {
     const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
+    let sendConfig = {
+        provider: program.provider as AnchorProvider,
+        signer: Data.signer,
+        clusterOrUrl: Data.clusterOrUrl,
+        simulation: Data.simulation,
+        skipConfirmation: Data.skipConfirmation,
+        prioritizationFee: Data.prioritizationFee,
+        retryDelay: Data.retryDelay,
+    };
+
     let depositSwapData = await createDepositSwapInstructions({
         swapDataAccount: Data.swapDataAccount,
         user: Data.signer.publicKey,
@@ -22,14 +32,8 @@ export async function depositSwap(Data: {
     });
 
     const transactionHashs = await sendBundledTransactionsV2({
-        provider: program.provider as AnchorProvider,
         txsWithoutSigners: depositSwapData,
-        signer: Data.signer,
-        clusterOrUrl: Data.clusterOrUrl,
-        simulation: Data.simulation,
-        skipConfirmation: Data.skipConfirmation,
-        prioritizationFee: Data.prioritizationFee,
-        retryDelay: Data.retryDelay,
+        ...sendConfig,
     });
 
     return transactionHashs;
