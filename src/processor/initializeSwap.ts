@@ -1,6 +1,6 @@
 import { Cluster, Keypair, PublicKey } from "@solana/web3.js";
 import { createInitializeSwapInstructions } from "../programInstructions/initializeSwap.instructions";
-import { sendBundledTransactions } from "../utils/sendBundledTransactions.function";
+import { sendBundledTransactionsV2 } from "../utils/sendBundledTransactions.function";
 import { InitializeData, SwapInfo } from "../utils/types";
 import { getProgram } from "../utils/getProgram.obj";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -13,12 +13,23 @@ export async function initializeSwap(Data: {
     skipConfirmation?: boolean;
     validateOwnership?: "warning" | "error";
     validateOwnershipIgnore?: string[];
+    prioritizationFee?: number;
+    retryDelay?: number;
 }): Promise<{
     initializeData: InitializeData;
     transactionHashs: string[];
 }> {
     // console.log("swapData", Data.swapData);
     const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
+    let sendConfig = {
+        provider: program.provider as AnchorProvider,
+        signer: Data.signer,
+        clusterOrUrl: Data.clusterOrUrl,
+        simulation: Data.simulation,
+        skipConfirmation: Data.skipConfirmation,
+        prioritizationFee: Data.prioritizationFee,
+        retryDelay: Data.retryDelay,
+    };
 
     let initializeData = await createInitializeSwapInstructions({
         swapInfo: Data.swapInfo,
@@ -33,14 +44,61 @@ export async function initializeSwap(Data: {
     //     throw initializeData.warning;
     // }
     try {
-        const transactionHashs = await sendBundledTransactions({
-            provider: program.provider as AnchorProvider,
-            txsWithoutSigners: initializeData.txWithoutSigner,
-            signer: Data.signer,
-            clusterOrUrl: Data.clusterOrUrl,
-            simulation: Data.simulation,
-            skipConfirmation: Data.skipConfirmation,
-        });
+        let initTxs = initializeData.initTxs;
+
+        let transactionHashs: string[] = [];
+
+        if (initTxs) {
+            if (initTxs.init) {
+                await sendBundledTransactionsV2({
+                    txsWithoutSigners: initTxs.init,
+                    ...sendConfig,
+                })
+                    .then((txhs) => {
+                        transactionHashs.push(...txhs);
+                    })
+                    .catch((error) => {
+                        console.log("error", error);
+                    });
+            }
+
+            if (initTxs.add) {
+                await sendBundledTransactionsV2({
+                    txsWithoutSigners: initTxs.add,
+                    ...sendConfig,
+                })
+                    .then((txhs) => {
+                        transactionHashs.push(...txhs);
+                    })
+                    .catch((error) => {
+                        console.log("error", error);
+                    });
+            }
+
+            if (initTxs.validate) {
+                await sendBundledTransactionsV2({
+                    txsWithoutSigners: initTxs.validate,
+                    ...sendConfig,
+                })
+                    .then((txhs) => {
+                        transactionHashs.push(...txhs);
+                    })
+                    .catch((error) => {
+                        console.log("error", error);
+                    });
+            }
+        } else {
+            await sendBundledTransactionsV2({
+                txsWithoutSigners: initializeData.txWithoutSigner,
+                ...sendConfig,
+            })
+                .then((txhs) => {
+                    transactionHashs.push(...txhs);
+                })
+                .catch((error) => {
+                    console.log("error", error);
+                });
+        }
 
         return {
             initializeData,

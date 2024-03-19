@@ -14,6 +14,7 @@ import {
     SwapIdentity,
     SwapInfo,
     TxWithSigner,
+    InitTxs
 } from "../utils/types";
 import { Program } from "@coral-xyz/anchor";
 import { findOrCreateAta } from "../utils/findOrCreateAta.function";
@@ -65,36 +66,45 @@ InitializeData> {
         });
 
         let txWithoutSigner: TxWithSigner[] = [];
+        let initTxs: InitTxs = {};
 
         if (initInstruction) {
-            txWithoutSigner.push({
+            let tx = {
                 tx: new Transaction().add(initInstruction),
                 // signers: [signer],
-            });
+            }
+            txWithoutSigner.push(tx);
+            initTxs.init = [tx];
         } else {
             console.log("Init-Initialize swap skipped");
         }
 
         if (addInstructions.ix) {
+            initTxs.add = [];
             addInstructions.ix.map((addInstruction) => {
-                txWithoutSigner.push({
+                let tx = {
                     tx: new Transaction().add(...addInstruction),
                     // signers: [signer],
-                });
+                }
+                txWithoutSigner.push(tx);
+                initTxs.add?.push(tx);
             });
         } else {
             console.log("Add-Instrutions was skipped");
         }
 
-        txWithoutSigner.push({
+        let validateTx = {
             tx: new Transaction().add(validateInstruction),
-        });
+        };
+        txWithoutSigner.push(validateTx);
+        initTxs.validate = [validateTx];
 
         return {
             // initializeData: {
             swapIdentity,
             programId: program.programId,
             txWithoutSigner,
+            initTxs,
             warning: addInstructions.warning,
             // },
             // shouldError: addInstructions.shouldError,

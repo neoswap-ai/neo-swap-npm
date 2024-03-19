@@ -1,5 +1,5 @@
 import { Cluster, Keypair, PublicKey } from "@solana/web3.js";
-import { sendBundledTransactions } from "../utils/sendBundledTransactions.function";
+import { sendBundledTransactionsV2 } from "../utils/sendBundledTransactions.function";
 import { TxWithSigner } from "../utils/types";
 import { createClaimSwapInstructions } from "../programInstructions/claimSwap.instructions";
 import { validateDeposit } from "../programInstructions/subFunction/validateDeposit.instructions";
@@ -14,9 +14,19 @@ export async function claimAndCloseSwap(Data: {
     skipFinalize?: boolean;
     simulation?: boolean;
     skipConfirmation?: boolean;
+    prioritizationFee?: number;
+    retryDelay?: number;
 }): Promise<string[]> {
-    let txToSend: TxWithSigner[] = [];
-    const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
+    const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });    
+    let sendConfig = {
+        provider: program.provider as AnchorProvider,
+        signer: Data.signer,
+        clusterOrUrl: Data.clusterOrUrl,
+        simulation: Data.simulation,
+        skipConfirmation: Data.skipConfirmation,
+        prioritizationFee: Data.prioritizationFee,
+        retryDelay: Data.retryDelay,
+    };
 
     let validateDepositTxData = await validateDeposit({
         swapDataAccount: Data.swapDataAccount,
@@ -24,7 +34,6 @@ export async function claimAndCloseSwap(Data: {
         clusterOrUrl: Data.clusterOrUrl,
         program,
     });
-    if (validateDepositTxData) txToSend.push(...validateDepositTxData);
 
     // if (!Data.skipFinalize) Data.skipFinalize = false;
     let claimTxData = await createClaimSwapInstructions({
@@ -35,27 +44,51 @@ export async function claimAndCloseSwap(Data: {
         program,
     });
 
-    if (claimTxData) txToSend.push(...claimTxData);
-
+    let validateClaimTxData;
     if (!Data.skipFinalize) {
-        let validateClaimTxData = await createValidateClaimedInstructions({
+        validateClaimTxData = await createValidateClaimedInstructions({
             swapDataAccount: Data.swapDataAccount,
             signer: Data.signer.publicKey,
             clusterOrUrl: Data.clusterOrUrl,
             program,
             // SkipFinalize: Data.skipFinalize,
         });
-        if (validateClaimTxData) txToSend.push(...validateClaimTxData);
     }
 
-    const transactionHashs = await sendBundledTransactions({
-        provider: program.provider as AnchorProvider,
-        txsWithoutSigners: txToSend,
-        signer: Data.signer,
-        clusterOrUrl: Data.clusterOrUrl,
-        simulation: Data.simulation,
-        skipConfirmation: Data.skipConfirmation,
-    });
+    let transactionHashs: string[] = [];
+
+    if (validateDepositTxData) {
+        await sendBundledTransactionsV2({
+            txsWithoutSigners: validateDepositTxData,
+            ...sendConfig,
+        }).then((txhs) => {
+            transactionHashs.push(...txhs);
+        }).catch((error) => {
+            console.log("error", error);
+        });
+    }
+
+    if (claimTxData) {
+        await sendBundledTransactionsV2({
+            txsWithoutSigners: claimTxData,
+            ...sendConfig,
+        }).then((txhs) => {
+            transactionHashs.push(...txhs);
+        }).catch((error) => {
+            console.log("error", error);
+        });
+    }
+
+    if (validateClaimTxData) {
+        await sendBundledTransactionsV2({
+            txsWithoutSigners: validateClaimTxData,
+            ...sendConfig,
+        }).then((txhs) => {
+            transactionHashs.push(...txhs);
+        }).catch((error) => {
+            console.log("error", error);
+        });
+    }
 
     return transactionHashs;
 }
