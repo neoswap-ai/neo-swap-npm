@@ -1,7 +1,7 @@
 import { Cluster, Keypair, PublicKey } from "@solana/web3.js";
 import { createInitializeSwapInstructions } from "../programInstructions/initializeSwap.instructions";
 import { sendBundledTransactionsV2 } from "../utils/sendBundledTransactions.function";
-import { InitializeData, SwapInfo } from "../utils/types";
+import { InitializeData, SwapInfo, TxWithSigner } from "../utils/types";
 import { getProgram } from "../utils/getProgram.obj";
 import { AnchorProvider } from "@coral-xyz/anchor";
 
@@ -49,55 +49,26 @@ export async function initializeSwap(Data: {
         let transactionHashs: string[] = [];
 
         if (initTxs) {
-            if (initTxs.init) {
-                await sendBundledTransactionsV2({
-                    txsWithoutSigners: initTxs.init,
-                    ...sendConfig,
-                })
-                    .then((txhs) => {
-                        transactionHashs.push(...txhs);
-                    })
-                    .catch((error) => {
-                        console.log("error", error);
-                    });
-            }
+            // ensure correct order of transactions
+            let bundlesToSend = [initTxs.init, initTxs.add, initTxs.validate].filter(
+                (x) => x // remove undefined
+            ) as TxWithSigner[][];
 
-            if (initTxs.add) {
+            for (let bundle of bundlesToSend) {
                 await sendBundledTransactionsV2({
-                    txsWithoutSigners: initTxs.add,
+                    txsWithoutSigners: bundle,
                     ...sendConfig,
-                })
-                    .then((txhs) => {
-                        transactionHashs.push(...txhs);
-                    })
-                    .catch((error) => {
-                        console.log("error", error);
-                    });
-            }
-
-            if (initTxs.validate) {
-                await sendBundledTransactionsV2({
-                    txsWithoutSigners: initTxs.validate,
-                    ...sendConfig,
-                })
-                    .then((txhs) => {
-                        transactionHashs.push(...txhs);
-                    })
-                    .catch((error) => {
-                        console.log("error", error);
-                    });
+                }).then((txhs) => {
+                    transactionHashs.push(...txhs);
+                });
             }
         } else {
             await sendBundledTransactionsV2({
                 txsWithoutSigners: initializeData.txWithoutSigner,
                 ...sendConfig,
-            })
-                .then((txhs) => {
-                    transactionHashs.push(...txhs);
-                })
-                .catch((error) => {
-                    console.log("error", error);
-                });
+            }).then((txhs) => {
+                transactionHashs.push(...txhs);
+            });
         }
 
         return {
