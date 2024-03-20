@@ -17,7 +17,7 @@ export async function claimAndCloseSwap(Data: {
     prioritizationFee?: number;
     retryDelay?: number;
 }): Promise<string[]> {
-    const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });    
+    const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
     let sendConfig = {
         provider: program.provider as AnchorProvider,
         signer: Data.signer,
@@ -44,7 +44,7 @@ export async function claimAndCloseSwap(Data: {
         program,
     });
 
-    let validateClaimTxData;
+    let validateClaimTxData = undefined;
     if (!Data.skipFinalize) {
         validateClaimTxData = await createValidateClaimedInstructions({
             swapDataAccount: Data.swapDataAccount,
@@ -57,36 +57,17 @@ export async function claimAndCloseSwap(Data: {
 
     let transactionHashs: string[] = [];
 
-    if (validateDepositTxData) {
-        await sendBundledTransactionsV2({
-            txsWithoutSigners: validateDepositTxData,
-            ...sendConfig,
-        }).then((txhs) => {
-            transactionHashs.push(...txhs);
-        }).catch((error) => {
-            console.log("error", error);
-        });
-    }
+    // ensure correct order of transactions
+    let bundlesToSend = [validateDepositTxData, claimTxData, validateClaimTxData].filter(
+        (x) => x // remove undefined
+    ) as TxWithSigner[][];
 
-    if (claimTxData) {
+    for (let bundle of bundlesToSend) {
         await sendBundledTransactionsV2({
-            txsWithoutSigners: claimTxData,
+            txsWithoutSigners: bundle,
             ...sendConfig,
         }).then((txhs) => {
             transactionHashs.push(...txhs);
-        }).catch((error) => {
-            console.log("error", error);
-        });
-    }
-
-    if (validateClaimTxData) {
-        await sendBundledTransactionsV2({
-            txsWithoutSigners: validateClaimTxData,
-            ...sendConfig,
-        }).then((txhs) => {
-            transactionHashs.push(...txhs);
-        }).catch((error) => {
-            console.log("error", error);
         });
     }
 

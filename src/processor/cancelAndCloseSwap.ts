@@ -45,26 +45,17 @@ export async function cancelAndCloseSwap(Data: {
 
     let transactionHashs: string[] = [];
 
-    if (cancelTxData) {
-        await sendBundledTransactionsV2({
-            txsWithoutSigners: cancelTxData,
-            ...sendConfig,            
-        }).then((txhs) => {
-            transactionHashs.push(...txhs);
-        }).catch((error) => {
-            console.log("error", error);
-        });
+    // ensure correct order of transactions
+    let bundlesToSend = [cancelTxData, validateCancelTxData].filter(
+        (x) => x // remove undefined
+    ) as TxWithSigner[][];
 
-    }
-
-    if (validateCancelTxData) {
+    for (let bundle of bundlesToSend) {
         await sendBundledTransactionsV2({
-            txsWithoutSigners: validateCancelTxData,
+            txsWithoutSigners: bundle,
             ...sendConfig,
         }).then((txhs) => {
             transactionHashs.push(...txhs);
-        }).catch((error) => {
-            console.log("error", error);
         });
     }
 
