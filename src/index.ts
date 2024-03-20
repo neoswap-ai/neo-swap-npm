@@ -24,7 +24,10 @@ import {
 } from "./utils/getSwapDataAccountFromPublicKey.function";
 import { getSwapIdentityFromData } from "./utils/getSwapIdentityFromData.function";
 import { isConfirmedTx } from "./utils/isConfirmedTx.function";
-import { sendBundledTransactions } from "./utils/sendBundledTransactions.function";
+import {
+    sendBundledTransactions,
+    sendBundledTransactionsV2,
+} from "./utils/sendBundledTransactions.function";
 import { invertedSwapDataConverter, swapDataConverter } from "./utils/swapDataConverter.function";
 import { userSwapDetails } from "./utils/userSwapDetails.obj";
 export * as neoTypes from "./utils/types";
@@ -36,7 +39,7 @@ const NFT_ACCOUNTS = {
     findRuleSet,
     findUserTokenRecord,
     getCNFTData,
-    getCNFTOwner
+    getCNFTOwner,
 };
 
 const UTILS = {
@@ -47,6 +50,7 @@ const UTILS = {
     getSwapIdentityFromData,
     userSwapDetails,
     sendBundledTransactions,
+    sendBundledTransactionsV2,
     isConfirmedTx,
     findOrCreateAta,
     swapDataConverter,
