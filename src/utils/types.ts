@@ -230,7 +230,7 @@ export type ErrorFeedback = {
 
 export type TxWithSigner = { tx: Transaction; signers?: Signer[] };
 
-export type VTxWithSigner = { vtx: VersionedTransaction, signers?: Signer[] }
+export type VTxWithSigner = { tx: VersionedTransaction; signers?: Signer[] };
 
 export enum TradeStatus {
     Initializing = 0,
