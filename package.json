@@ -1,6 +1,6 @@
 {
     "name": "@neoswap/solana",
-    "version": "0.3.21",
+    "version": "0.3.22",
     "repository": {
         "type": "git",
         "url": "git+htt// Data after initializing the swapps://github.com/neoswap-ai/neo-swap-npm.git"
@@ -17,7 +17,8 @@
         "./README.md"
     ],
     "scripts": {
-        "compile": "rm -rf dist/lib && tsc && tsc --build tsconfig.es5.json"
+        "compile": "rm -rf dist/lib && tsc && tsc --build tsconfig.es5.json",
+        "updateLink": "npm run compile && npm rm @neoswap/solana -g && npm link"
     },
     "dependencies": {
         "@coral-xyz/anchor": "^0.28.0",

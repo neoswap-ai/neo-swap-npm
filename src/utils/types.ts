@@ -1,5 +1,5 @@
 import { BN } from "@coral-xyz/anchor";
-import { PublicKey, Signer, Transaction } from "@solana/web3.js";
+import { PublicKey, Signer, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 export type ItemStatusInfo = "pending" | "deposited" | "claimed" | "returned";
 export type TradeStatusInfo =
@@ -229,6 +229,8 @@ export type ErrorFeedback = {
 };
 
 export type TxWithSigner = { tx: Transaction; signers?: Signer[] };
+
+export type VTxWithSigner = { tx: VersionedTransaction; signers?: Signer[] };
 
 export enum TradeStatus {
     Initializing = 0,

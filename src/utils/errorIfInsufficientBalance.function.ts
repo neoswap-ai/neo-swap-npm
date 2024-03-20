@@ -1,7 +1,7 @@
 import { NATIVE_MINT } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { ErrorFeedback } from "./types";
-import { delay } from "./delay";
+import { delay } from "./utils";
 
 export async function errorIfInsufficientBalance(Data: {
     connection: Connection;

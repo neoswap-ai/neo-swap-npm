@@ -1,9 +1,9 @@
 import { Cluster, Connection, Keypair, VersionedTransaction, Finality } from "@solana/web3.js";
 import { getProgram } from "./getProgram.obj";
-import { ErrorFeedback, TxWithSigner } from "./types";
+import { ErrorFeedback, TxWithSigner, VTxWithSigner } from "./types";
 import { isConfirmedTx } from "./isConfirmedTx.function";
 import { AnchorProvider } from "@coral-xyz/anchor";
-import { delay } from "./delay";
+import { delay, isVersionedArray, isVersionedTx } from "./utils";
 import { addPrioritizationFee } from "./addPrioritizationFee";
 
 // const getProgram  from "./getProgram.obj");
@@ -47,20 +47,6 @@ export async function sendBundledTransactions(Data: {
         if (!provider.sendAll) throw { message: "your provider is not an AnchorProvider type" };
         if (!Data.simulation) Data.simulation = false;
 
-        // const transactionHashs = await Promise.all(
-        //     Data.txsWithoutSigners.map(async (txWithoutSigner, d) => {
-        //         txWithoutSigner.tx.sign(Data.signer);
-        //         await delay(250 * d);
-        //         return await provider.connection.sendTransaction(
-        //             txWithoutSigner.tx,
-        //             [Data.signer],
-        //             {
-        //                 skipPreflight: Data.simulation,
-        //             }
-        //         );
-        //     })
-        // );
-
         const transactionHashs = await provider.sendAll(txsWithSigners, {
             maxRetries: 10,
             skipPreflight: !Data.simulation,
@@ -95,7 +81,7 @@ export async function sendBundledTransactions(Data: {
 }
 
 export async function sendBundledTransactionsV2(Data: {
-    txsWithoutSigners: TxWithSigner[];
+    txsWithoutSigners: TxWithSigner[] | VTxWithSigner[];
     signer: Keypair;
     clusterOrUrl: Cluster | string;
     simulation?: boolean;
@@ -107,21 +93,27 @@ export async function sendBundledTransactionsV2(Data: {
     try {
         // console.log(txWithSigners);
 
-        if (Data.prioritizationFee) {
-            Data.txsWithoutSigners = Data.txsWithoutSigners.map((tx) =>
-                addPrioritizationFee(tx, Data.prioritizationFee)
-            );
-        }
-
+        
         const provider = Data.provider
             ? Data.provider
             : getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer }).provider;
 
+        if (isVersionedArray(Data.txsWithoutSigners)) {
+            if (Data.prioritizationFee)
+                console.warn("prioritizationFee is not supported for VersionedTransaction");
+        } else {
+            Data.txsWithoutSigners = Data.txsWithoutSigners.map((tx) => {
+                tx = addPrioritizationFee(tx, Data.prioritizationFee);
+                tx.tx.feePayer = Data.signer.publicKey;
+                return tx;
+            });
+        }
         const txsWithSigners = Data.txsWithoutSigners.map((txWithSigners) => {
             txWithSigners.signers = [Data.signer];
-            txWithSigners.tx.feePayer = Data.signer.publicKey;
             return txWithSigners;
         });
+
+
         // console.log('program',program);
 
         console.log(
@@ -152,7 +144,7 @@ export async function sendBundledTransactionsV2(Data: {
 }
 
 async function sendTransaction(
-    tx: TxWithSigner,
+    tx: TxWithSigner | VTxWithSigner,
     connection: Connection,
     skipPreflight: boolean,
     commitment: Finality,
@@ -163,9 +155,16 @@ async function sendTransaction(
     }
 
     let recentBlockhash = await connection.getLatestBlockhash("confirmed");
-    tx.tx.recentBlockhash = recentBlockhash.blockhash;
 
-    let vtx = new VersionedTransaction(tx.tx.compileMessage());
+    let vtx: VersionedTransaction;
+    if (isVersionedTx(tx)) {
+        vtx = tx.tx;
+        vtx.message.recentBlockhash = recentBlockhash.blockhash;
+    } else {
+        tx.tx.recentBlockhash = recentBlockhash.blockhash;
+        vtx = new VersionedTransaction(tx.tx.compileMessage());
+    }
+
     vtx.sign(tx.signers);
 
     let hash = await connection.sendTransaction(vtx, {
@@ -181,7 +180,7 @@ async function sendTransaction(
             commitment,
             tx: vtx,
         });
-        
+
         if (check === true) {
             keepChecking = false;
             console.log("Transaction confirmed: ", hash);
