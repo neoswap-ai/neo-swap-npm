@@ -95,17 +95,15 @@ export async function sendBundledTransactionsV2(Data: {
 
         
         const provider = Data.provider
-        ? Data.provider
-        : getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer }).provider;
-        
-        
+            ? Data.provider
+            : getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer }).provider;
+
         if (isVersionedArray(Data.txsWithoutSigners)) {
-            if (Data.prioritizationFee) {
-            console.warn("prioritizationFee is not supported for VersionedTransaction");
-            }
+            if (Data.prioritizationFee)
+                console.warn("prioritizationFee is not supported for VersionedTransaction");
         } else {
-            Data.txsWithoutSigners = Data.txsWithoutSigners.map((tx) =>{
-                tx = addPrioritizationFee(tx, Data.prioritizationFee)
+            Data.txsWithoutSigners = Data.txsWithoutSigners.map((tx) => {
+                tx = addPrioritizationFee(tx, Data.prioritizationFee);
                 tx.tx.feePayer = Data.signer.publicKey;
                 return tx;
             });
@@ -114,8 +112,8 @@ export async function sendBundledTransactionsV2(Data: {
             txWithSigners.signers = [Data.signer];
             return txWithSigners;
         });
-        
-        
+
+
         // console.log('program',program);
 
         console.log(
@@ -160,12 +158,14 @@ async function sendTransaction(
 
     let vtx: VersionedTransaction;
     if (isVersionedTx(tx)) {
-        vtx = tx.vtx;
+        vtx = tx.tx;
         vtx.message.recentBlockhash = recentBlockhash.blockhash;
     } else {
         tx.tx.recentBlockhash = recentBlockhash.blockhash;
         vtx = new VersionedTransaction(tx.tx.compileMessage());
     }
+
+    vtx.sign(tx.signers);
 
     let hash = await connection.sendTransaction(vtx, {
         skipPreflight,
@@ -180,7 +180,7 @@ async function sendTransaction(
             commitment,
             tx: vtx,
         });
-        
+
         if (check === true) {
             keepChecking = false;
             console.log("Transaction confirmed: ", hash);
