@@ -93,7 +93,6 @@ export async function sendBundledTransactionsV2(Data: {
     try {
         // console.log(txWithSigners);
 
-        
         const provider = Data.provider
             ? Data.provider
             : getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer }).provider;
@@ -113,7 +112,6 @@ export async function sendBundledTransactionsV2(Data: {
             return txWithSigners;
         });
 
-
         // console.log('program',program);
 
         console.log(
@@ -132,7 +130,7 @@ export async function sendBundledTransactionsV2(Data: {
                 txsWithSigners[i],
                 provider.connection,
                 !Data.simulation,
-                "confirmed",
+                "finalized",
                 Data.retryDelay ? Data.retryDelay : 5000
             );
             transactionHashs.push(hash);
