@@ -537,6 +537,8 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE.md](LIC
 
 ## Contact
 
+kuba.kwiecien@neoswap.ai
+
 <!-- MARKDOWN LINKS & IMAGES -->
 
 [neoswap-app]: https://www.neoswap.xyz
