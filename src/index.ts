@@ -10,69 +10,70 @@ import { createDepositSwapInstructions } from "./programInstructions/depositSwap
 import { prepareDepositSwapInstructions } from "./programInstructions/depositSwap.prepareInstructions";
 import { createInitializeSwapInstructions } from "./programInstructions/initializeSwap.instructions";
 import {
-    findNftDataAndMetadataAccount,
-    findNftMasterEdition,
-    findRuleSet,
-    findUserTokenRecord,
+  findNftDataAndMetadataAccount,
+  findNftMasterEdition,
+  findRuleSet,
+  findUserTokenRecord,
 } from "./utils/findNftDataAndAccounts.function";
 import { findOrCreateAta } from "./utils/findOrCreateAta.function";
 import { getCNFTData, getCNFTOwner } from "./utils/getCNFTData.function";
 import { getProgram } from "./utils/getProgram.obj";
 import {
-    getSwapDataAccountFromPublicKey,
-    getDataFromSwapdataAccountPublickey,
+  getSwapDataAccountFromPublicKey,
+  getDataFromSwapdataAccountPublickey,
 } from "./utils/getSwapDataAccountFromPublicKey.function";
 import { getSwapIdentityFromData } from "./utils/getSwapIdentityFromData.function";
 import { isConfirmedTx } from "./utils/isConfirmedTx.function";
 import {
-    sendBundledTransactions,
-    sendBundledTransactionsV2,
+  sendBundledTransactions,
+  sendBundledTransactionsV2,
 } from "./utils/sendBundledTransactions.function";
-import { invertedSwapDataConverter, swapDataConverter } from "./utils/swapDataConverter.function";
+import {
+  invertedSwapDataConverter,
+  swapDataConverter,
+} from "./utils/swapDataConverter.function";
 import { userSwapDetails } from "./utils/userSwapDetails.obj";
 export * as neoTypes from "./utils/types";
 export * as neoConst from "./utils/const";
 
 const NFT_ACCOUNTS = {
-    findNftDataAndMetadataAccount,
-    findNftMasterEdition,
-    findRuleSet,
-    findUserTokenRecord,
-    getCNFTData,
-    getCNFTOwner,
+  findNftDataAndMetadataAccount,
+  findNftMasterEdition,
+  findRuleSet,
+  findUserTokenRecord,
+  getCNFTData,
+  getCNFTOwner,
 };
 
 const UTILS = {
-    NFT_ACCOUNTS,
-    getProgram,
-    getSwapDataAccountFromPublicKey,
-    getDataFromSwapdataAccountPublickey,
-    getSwapIdentityFromData,
-    userSwapDetails,
-    sendBundledTransactions,
-    sendBundledTransactionsV2,
-    isConfirmedTx,
-    findOrCreateAta,
-    swapDataConverter,
-    invertedSwapDataConverter,
+  NFT_ACCOUNTS,
+  getProgram,
+  getSwapDataAccountFromPublicKey,
+  getDataFromSwapdataAccountPublickey,
+  getSwapIdentityFromData,
+  userSwapDetails,
+  sendBundledTransactions,
+  sendBundledTransactionsV2,
+  isConfirmedTx,
+  findOrCreateAta,
+  swapDataConverter,
+  invertedSwapDataConverter,
 };
 const CREATE_INSTRUCTIONS = {
-    createInitializeSwapInstructions,
-    createDepositSwapInstructions,
-    createClaimSwapInstructions,
-    createCancelSwapInstructions,
-    prepareDepositSwapInstructions,
-    apiProcessorTranscript,
+  createInitializeSwapInstructions,
+  createDepositSwapInstructions,
+  createClaimSwapInstructions,
+  createCancelSwapInstructions,
+  prepareDepositSwapInstructions,
+  apiProcessorTranscript,
 };
 
 export const neoSwap = {
-    initializeSwap,
-    depositSwap,
-    claimAndCloseSwap,
-    cancelAndCloseSwap,
-    apiProcessor,
-    UTILS,
-    CREATE_INSTRUCTIONS,
+  initializeSwap,
+  depositSwap,
+  claimAndCloseSwap,
+  cancelAndCloseSwap,
+  apiProcessor,
+  UTILS,
+  CREATE_INSTRUCTIONS,
 };
-
-// export default neoSwapNpm;

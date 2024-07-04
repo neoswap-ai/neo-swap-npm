@@ -4,37 +4,45 @@ import { createDepositSwapInstructions } from "../programInstructions/depositSwa
 import { getProgram } from "../utils/getProgram.obj";
 import { AnchorProvider } from "@coral-xyz/anchor";
 
+// Function to deposit into a swap on the Solana blockchain using specific program instructions
 export async function depositSwap(Data: {
-    swapDataAccount: PublicKey;
-    signer: Keypair;
-    clusterOrUrl: Cluster | string;
-    simulation?: boolean;
-    skipConfirmation?: boolean;
-    prioritizationFee?: number;
-    retryDelay?: number;
+  swapDataAccount: PublicKey; // The public key of the swap data account
+  signer: Keypair; // The signer's keypair for transaction signing
+  clusterOrUrl: Cluster | string; // The cluster URL or identifier for the Solana network
+  simulation?: boolean; // Optional flag for simulation mode
+  skipConfirmation?: boolean; // Optional flag to skip transaction confirmation
+  prioritizationFee?: number; // Optional fee for transaction prioritization
+  retryDelay?: number; // Optional delay between retries in milliseconds
 }): Promise<string[]> {
-    const program = getProgram({ clusterOrUrl: Data.clusterOrUrl, signer: Data.signer });
-    let sendConfig = {
-        provider: program.provider as AnchorProvider,
-        signer: Data.signer,
-        clusterOrUrl: Data.clusterOrUrl,
-        simulation: Data.simulation,
-        skipConfirmation: Data.skipConfirmation,
-        prioritizationFee: Data.prioritizationFee,
-        retryDelay: Data.retryDelay,
-    };
+  // Retrieve the program object with the provided cluster and signer
+  const program = getProgram({
+    clusterOrUrl: Data.clusterOrUrl,
+    signer: Data.signer,
+  });
+  // Configuration for sending transactions
+  let sendConfig = {
+    provider: program.provider as AnchorProvider,
+    signer: Data.signer,
+    clusterOrUrl: Data.clusterOrUrl,
+    simulation: Data.simulation,
+    skipConfirmation: Data.skipConfirmation,
+    prioritizationFee: Data.prioritizationFee,
+    retryDelay: Data.retryDelay,
+  };
 
-    let depositSwapData = await createDepositSwapInstructions({
-        swapDataAccount: Data.swapDataAccount,
-        user: Data.signer.publicKey,
-        clusterOrUrl: Data.clusterOrUrl,
-        program,
-    });
+  // Generate the deposit swap instructions
+  let depositSwapData = await createDepositSwapInstructions({
+    swapDataAccount: Data.swapDataAccount,
+    user: Data.signer.publicKey,
+    clusterOrUrl: Data.clusterOrUrl,
+    program,
+  });
 
-    const transactionHashs = await sendBundledTransactionsV2({
-        txsWithoutSigners: depositSwapData,
-        ...sendConfig,
-    });
+  // Send the deposit swap transactions and return their hashes
+  const transactionHashs = await sendBundledTransactionsV2({
+    txsWithoutSigners: depositSwapData,
+    ...sendConfig,
+  });
 
-    return transactionHashs;
+  return transactionHashs;
 }
