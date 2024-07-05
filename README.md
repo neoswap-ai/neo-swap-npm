@@ -27,7 +27,7 @@
 
 # About The Project
 
-Collection Swap allows users to exchange collections of Non-Fungible Tokens (NFTs) securely and transparently. The project leverages blockchain technology and smart contracts to facilitate trustless swaps of digital assets, providing a seamless and intuitive experience for collectors.
+Smart Swap lets users engage in multiway Non-Fungible Tokens (NFTs) trading securely and transparently. The project leverages blockchain technology and smart contracts to facilitate trustless swaps of digital assets, providing a seamless and intuitive experience for collectors.
 
 More information here: [Neoswap Website](https://neoswap.xyz/)
 
